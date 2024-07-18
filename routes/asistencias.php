@@ -113,12 +113,64 @@ $app->group('/asistencias', function ($app) {
             $dbc = $dbc->connect();
             $stmt = $dbc->query($sql);
             $dbc =  null;
-            $json = json_encode(['status' => true, 'mensaje' => 'Elemento eliminado']);
+            $json = json_encode(['status' => true,'code' => 200 ,'data' => 'Elemento eliminado']);
         } catch (PDOException $ERROR) {
             $mensaje = $ERROR->getMessage();
-            $json = json_encode(['status' => false, 'mensaje' => $mensaje]);
+            $json = json_encode(['status' => false,'code' => 400 ,'data' => $mensaje]);
         }
         $response->getBody()->write($json);
         return $response;
+    });
+    //Asistencias mes actual
+    $app->get('/buscartodosmesactual/{fechaInicio}/{fechaFin}', function($request, $response, $args){
+        try {
+            //$fechaInicio = "2024-07-01";
+            //$fechaFin = "2024-07-31";
+            $fechaInicio = $args['fechaInicio'];
+            $fechaFin = $args['fechaFin'];
+            $sql = "SELECT asi.*, usu.nombres as nombresUsuario, usu.apellidos as apellidosUsuarios, eve.nombre as nombreEvento, eve.horaEntrada as horaEntradaEvento, eve.horaSalida as horaSalidaEvento FROM asistencias AS asi INNER JOIN usuarios AS usu INNER JOIN eventos AS eve WHERE asi.estatus != 0 AND asi.idUsuario = usu.idUsuario AND fechaActual >= DATE('$fechaInicio') AND fechaActual <= DATE('$fechaFin')";
+            $dbc = new db();
+            $dbc = $dbc->connect();
+            $stmt = $dbc->query($sql);
+            $data = $stmt->fetchAll(PDO::FETCH_OBJ);
+            $dbc = null;
+            $json = json_encode(['status' => true, 'code' => 200, 'data' => $data]);
+            /*if ($data) {
+                $json = json_encode(['status' => true, 'code' => 200, 'data' => $data]);
+            } else {
+                $json = json_encode(['status' => false, 'code' => 401, 'data' => 'No se encontro la asistencia']);
+            }*/
+        } catch (PDOException $ERROR) {
+            $message = $ERROR->getMessage();
+            $json = json_encode(['status' => false, 'code' => 400, 'data' => $message]);
+        }
+        $response->getBody()->write($json);
+        return $response;
+    });
+    //Eliminacion logica
+    $app->put('/eliminarlogica', function($request, $response, $args){
+        try {
+            $data = $request->getParsedBody();
+            $estatus = 0;
+            $sql = "UPDATE asistencias SET estatus= :estatus WHERE idAsistencia= :idAsistencia";
+            $dbc = new db();
+            $dbc = $dbc->connect();
+            $stmt = $dbc->prepare($sql);
+            $stmt->bindParam("idAsistencia", $data["idAsistencia"]);
+            $stmt->bindParam("estatus", $estatus);
+            $stmt->execute();
+            $dbc = null;
+            if($data){
+                $json = json_encode(['status' => true, 'code' => 200, 'data' => $data]);
+            }else{
+                $json = json_encode(['status' => false, 'code' => 401, 'data' => 'No se encontro la asistencia']);
+            }
+        } catch (PDOException $error) {
+            $message = $error->getMessage();
+            $json = json_encode(['status' => false, 'code' => 400, 'data' => $message]);
+        }
+        $response->getBody()->write($json);
+        return $response;
+
     });
 });
