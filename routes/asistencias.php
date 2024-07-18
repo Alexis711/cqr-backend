@@ -150,8 +150,8 @@ $app->group('/asistencias', function ($app) {
     //Eliminacion logica
     $app->put('/eliminacionlogica/{idAsistencia}', function($request, $response, $args){
         try {
-            $data = $request->getParsedBody();
-            $idAsistencia = $data["idAsistencia"];
+            //$data = $request->getParsedBody();
+            $idAsistencia = $args["idAsistencia"];
             $estatus = 0;
             $sql = "UPDATE asistencias SET estatus= :estatus WHERE idAsistencia= :idAsistencia";
             $dbc = new db();
@@ -160,12 +160,14 @@ $app->group('/asistencias', function ($app) {
             $stmt->bindParam("idAsistencia", $idAsistencia);
             $stmt->bindParam("estatus", $estatus);
             $stmt->execute();
+            $data = $stmt->fetchAll(PDO::FETCH_OBJ);
             $dbc = null;
-            if($data){
+            $json = json_encode(['status' => true, 'code' => 200, 'data' => "Se elimino correctamente"]);
+            /*if($data){
                 $json = json_encode(['status' => true, 'code' => 200, 'data' => $data]);
             }else{
                 $json = json_encode(['status' => false, 'code' => 401, 'data' => 'No se encontro la asistencia']);
-            }
+            }*/
         } catch (PDOException $error) {
             $message = $error->getMessage();
             $json = json_encode(['status' => false, 'code' => 400, 'data' => $message]);
