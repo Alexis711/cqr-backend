@@ -148,15 +148,16 @@ $app->group('/asistencias', function ($app) {
         return $response;
     });
     //Eliminacion logica
-    $app->put('/eliminarlogica', function($request, $response, $args){
+    $app->put('/eliminacionlogica/{idAsistencia}', function($request, $response, $args){
         try {
             $data = $request->getParsedBody();
+            $idAsistencia = $data["idAsistencia"];
             $estatus = 0;
             $sql = "UPDATE asistencias SET estatus= :estatus WHERE idAsistencia= :idAsistencia";
             $dbc = new db();
             $dbc = $dbc->connect();
             $stmt = $dbc->prepare($sql);
-            $stmt->bindParam("idAsistencia", $data["idAsistencia"]);
+            $stmt->bindParam("idAsistencia", $idAsistencia);
             $stmt->bindParam("estatus", $estatus);
             $stmt->execute();
             $dbc = null;
