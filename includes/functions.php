@@ -21,6 +21,12 @@ function gene_date() {
     setlocale(LC_TIME, 'es_MX.UTF-8');
     return  date('Y-m-d');
 }
+//Funcion para obtener la fecha de Mexico
+function gene_week_day() {
+    date_default_timezone_set('America/Mexico_City');
+    setlocale(LC_TIME, 'es_MX.UTF-8');
+    return  date('w');
+}
 //Funcion para obtener la hora de Mexico
 function gene_time() {
     date_default_timezone_set('America/Mexico_City');

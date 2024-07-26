@@ -52,9 +52,10 @@ $app->group('/asistencias', function ($app) {
             $uuid = gene_id();
             $date = gene_date();
             $time = gene_time();
-            $estatus = 1;
-            $sql = "INSERT INTO asistencias (idAsistencia, fechaActual, horaEntrada, horaSalida, estatus, notas, idEvento, idUsuario) 
-            VALUES (:idAsistencia, :fechaActual, :horaEntrada, :horaSalida, :estatus, :notas, :idEvento, :idUsuario)";
+            $dia = gene_week_day();
+            $estatus = 0;
+            $sql = "INSERT INTO asistencias (idAsistencia, fechaActual, horaEntrada, horaSalida, estatus, notas, dia, idEvento, idUsuario) 
+            VALUES (:idAsistencia, :fechaActual, :horaEntrada, :horaSalida, :estatus, :notas, :dia, :idEvento, :idUsuario)";
             $dbc = new db();
             $dbc = $dbc->connect();
             $stmt = $dbc->prepare($sql);
@@ -62,8 +63,9 @@ $app->group('/asistencias', function ($app) {
             $stmt->bindParam("fechaActual", $date);
             $stmt->bindParam("horaEntrada", $time);
             $stmt->bindParam("horaSalida", $data["horaSalida"]);
-            $stmt->bindParam("estatus", $data["estatus"]);
+            $stmt->bindParam("estatus", $estatus);
             $stmt->bindParam("notas", $data["notas"]);
+            $stmt->bindParam("dia", $dia);
             $stmt->bindParam("idEvento", $data["idEvento"]);
             $stmt->bindParam("idUsuario", $data["idUsuario"]);
             $stmt->execute();
@@ -86,7 +88,6 @@ $app->group('/asistencias', function ($app) {
             $dbc = $dbc->connect();
             $stmt = $dbc->prepare($sql);
             $stmt->bindParam("idAsistencia", $asistencia["idAsistencia"]);
-
             $stmt->bindParam("horaSalida", $asistencia["horaSalida"]);
             $stmt->bindParam("estatus", $asistencia["estatus"]);
             $stmt->bindParam("notas", $asistencia["notas"]);
@@ -113,22 +114,24 @@ $app->group('/asistencias', function ($app) {
             $dbc = $dbc->connect();
             $stmt = $dbc->query($sql);
             $dbc =  null;
-            $json = json_encode(['status' => true,'code' => 200 ,'data' => 'Elemento eliminado']);
+            $json = json_encode(['status' => true, 'code' => 200, 'data' => 'Elemento eliminado']);
         } catch (PDOException $ERROR) {
             $mensaje = $ERROR->getMessage();
-            $json = json_encode(['status' => false,'code' => 400 ,'data' => $mensaje]);
+            $json = json_encode(['status' => false, 'code' => 400, 'data' => $mensaje]);
         }
         $response->getBody()->write($json);
         return $response;
     });
     //Asistencias mes actual
-    $app->get('/buscartodosmesactual/{fechaInicio}/{fechaFin}', function($request, $response, $args){
+    $app->get('/buscartodosmesactual/{fechaInicio}/{fechaFin}', function ($request, $response, $args) {
         try {
             //$fechaInicio = "2024-07-01";
             //$fechaFin = "2024-07-31";
             $fechaInicio = $args['fechaInicio'];
             $fechaFin = $args['fechaFin'];
-            $sql = "SELECT asi.*, usu.nombres as nombresUsuario, usu.apellidos as apellidosUsuarios, eve.nombre as nombreEvento, eve.horaEntrada as horaEntradaEvento, eve.horaSalida as horaSalidaEvento FROM asistencias AS asi INNER JOIN usuarios AS usu INNER JOIN eventos AS eve WHERE asi.estatus != 0 AND asi.idUsuario = usu.idUsuario AND fechaActual >= DATE('$fechaInicio') AND fechaActual <= DATE('$fechaFin')";
+            //$sql = "SELECT asi.*, usu.nombres as nombresUsuario, usu.apellidos as apellidosUsuarios, eve.nombre as nombreEvento, eve.horaEntrada as horaEntradaEvento, eve.horaSalida as horaSalidaEvento FROM asistencias AS asi INNER JOIN usuarios AS usu INNER JOIN eventos AS eve WHERE asi.estatus != 0 AND asi.idUsuario = usu.idUsuario AND fechaActual >= DATE('$fechaInicio') AND fechaActual <= DATE('$fechaFin')";
+            $sql = "SELECT asi.*, usu.nombres as nombresUsuario, usu.apellidos as apellidosUsuarios, eve.nombre as nombreEvento, eve.horaEntrada as horaEntradaEvento, eve.horaSalida as horaSalidaEvento, eve.grupo as grupo, ubi.nombre as salon FROM asistencias AS asi INNER JOIN usuarios AS usu ON asi.idUsuario = usu.idUsuario INNER JOIN eventos AS eve ON asi.idEvento = eve.idEvento INNER JOIN ubicaciones AS ubi ON eve.idUbicacion = ubi.idUbicacion INNER JOIN dias AS dia ON asi.idEvento = dia.idEvento WHERE asi.estatus != 0 AND asi.fechaActual >= DATE('$fechaInicio') AND asi.fechaActual <= DATE('$fechaFin')";
+
             $dbc = new db();
             $dbc = $dbc->connect();
             $stmt = $dbc->query($sql);
@@ -148,7 +151,7 @@ $app->group('/asistencias', function ($app) {
         return $response;
     });
     //Eliminacion logica
-    $app->put('/eliminacionlogica/{idAsistencia}', function($request, $response, $args){
+    $app->put('/eliminacionlogica/{idAsistencia}', function ($request, $response, $args) {
         try {
             //$data = $request->getParsedBody();
             $idAsistencia = $args["idAsistencia"];
@@ -174,6 +177,108 @@ $app->group('/asistencias', function ($app) {
         }
         $response->getBody()->write($json);
         return $response;
-
+    });
+    //Funcion de asistencia por dia y hora
+    $app->get('/asistenciapordia/{horaActual}', function ($request, $response, $args) {
+        try {
+            $arrayDias = ["domingo", "lunes", "martes", "miercoles", "jueves", "viernes", "sabado"];
+            $diaSemana = gene_week_day();
+            $horaActual = $args['horaActual'];
+            $fechaActual = gene_date();
+            $sql = "SELECT asi.*, usu.nombres as nombresUsuario, usu.apellidos as apellidosUsuarios, eve.nombre as nombreEvento, eve.grupo as grupo, ubi.nombre as salon, eve.horaEntrada as horaEntradaEvento, eve.horaSalida as horaSalidaEvento FROM asistencias AS asi INNER JOIN usuarios AS usu ON asi.idUsuario = usu.idUsuario INNER JOIN eventos AS eve ON asi.idEvento = eve.idEvento INNER JOIN ubicaciones AS ubi ON eve.idUbicacion = ubi.idUbicacion INNER JOIN dias AS dia ON asi.idEvento = dia.idEvento WHERE asi.estatus != 0 AND (dia.$arrayDias[$diaSemana] = 1) AND asi.fechaActual = DATE('$fechaActual') AND ('$horaActual' >= eve.horaEntrada AND '$horaActual' <= eve.horaSalida )";
+            $dbc = new db();
+            $dbc = $dbc->connect();
+            $stmt = $dbc->query($sql);
+            $data = $stmt->fetchAll(PDO::FETCH_OBJ);
+            $dbc = null;
+            if ($data) {
+                $json = json_encode(['status' => true, 'code' => 200, 'data' => $data]);
+            } else {
+                $json = json_encode(['status' => false, 'code' => 401, 'data' => 'No hay asistencias']);
+            }
+        } catch (PDOException $ERROR) {
+            $message = $ERROR->getMessage();
+            $json = json_encode(['status' => false, 'code' => 400, 'data' => $message]);
+        }
+        $response->getBody()->write($json);
+        return $response;
+    });
+    //Funcion de asistencia por dia, hora y grupo
+    $app->get('/asistenciaporgrupo/{horaActual}/{grupo}', function ($request, $response, $args) {
+        try {
+            $arrayDias = ["domingo", "lunes", "martes", "miercoles", "jueves", "viernes", "sabado"];
+            $diaSemana = gene_week_day();
+            $horaActual = $args['horaActual'];
+            $grupo = $args['grupo'];
+            $fechaActual = gene_date();
+            $sql = "SELECT asi.*, usu.nombres as nombresUsuario, usu.apellidos as apellidosUsuarios, eve.nombre as nombreEvento, eve.grupo as grupo, ubi.nombre as salon, eve.horaEntrada as horaEntradaEvento, eve.horaSalida as horaSalidaEvento FROM asistencias AS asi INNER JOIN usuarios AS usu ON asi.idUsuario = usu.idUsuario INNER JOIN eventos AS eve ON asi.idEvento = eve.idEvento INNER JOIN ubicaciones AS ubi ON eve.idUbicacion = ubi.idUbicacion INNER JOIN dias AS dia ON asi.idEvento = dia.idEvento WHERE asi.estatus != 0 AND (dia.$arrayDias[$diaSemana] = 1) AND asi.fechaActual = DATE('$fechaActual') AND ('$horaActual' >= eve.horaEntrada AND '$horaActual' <= eve.horaSalida ) AND eve.grupo = '$grupo'";
+            $dbc = new db();
+            $dbc = $dbc->connect();
+            $stmt = $dbc->query($sql);
+            $data = $stmt->fetchAll(PDO::FETCH_OBJ);
+            $dbc = null;
+            if ($data) {
+                $json = json_encode(['status' => true, 'code' => 200, 'data' => $data]);
+            } else {
+                $json = json_encode(['status' => false, 'code' => 401, 'data' => 'No hay asistencias']);
+            }
+        } catch (PDOException $ERROR) {
+            $message = $ERROR->getMessage();
+            $json = json_encode(['status' => false, 'code' => 400, 'data' => $message]);
+        }
+        $response->getBody()->write($json);
+        return $response;
+    });
+    //Funcion de asistencia por dia (puntual)
+    $app->get('/asistenciapuntual/{horaActual}', function ($request, $response, $args) {
+        try {
+            $arrayDias = ["domingo", "lunes", "martes", "miercoles", "jueves", "viernes", "sabado"];
+            $diaSemana = gene_week_day();
+            $horaActual = $args['horaActual'];
+            $fechaActual = gene_date();
+            $sql = "SELECT asi.*, usu.nombres as nombresUsuario, usu.apellidos as apellidosUsuarios, eve.nombre as nombreEvento, eve.grupo as grupo, ubi.nombre as salon, eve.horaEntrada as horaEntradaEvento, eve.horaSalida as horaSalidaEvento FROM asistencias AS asi INNER JOIN usuarios AS usu ON asi.idUsuario = usu.idUsuario INNER JOIN eventos AS eve ON asi.idEvento = eve.idEvento INNER JOIN ubicaciones AS ubi ON eve.idUbicacion = ubi.idUbicacion INNER JOIN dias AS dia ON asi.idEvento = dia.idEvento WHERE asi.estatus != 0 AND (dia.$arrayDias[$diaSemana] = 1) AND asi.fechaActual = DATE('$fechaActual') AND ('$horaActual' >= eve.horaEntrada AND '$horaActual' <= eve.horaSalida ) AND (TIMEDIFF(asi.horaEntrada,eve.horaEntrada) <= '00:10:00') ";
+            $dbc = new db();
+            $dbc = $dbc->connect();
+            $stmt = $dbc->query($sql);
+            $data = $stmt->fetchAll(PDO::FETCH_OBJ);
+            $dbc = null;
+            $json = json_encode(['status' => true, 'code' => 200, 'data' => $data]);
+            /*if ($data) {
+                $json = json_encode(['status' => true, 'code' => 200, 'data' => $data]);
+            } else {
+                $json = json_encode(['status' => false, 'code' => 401, 'data' => 'No hay asistencias']);
+            }*/
+        } catch (PDOException $ERROR) {
+            $message = $ERROR->getMessage();
+            $json = json_encode(['status' => false, 'code' => 400, 'data' => $message]);
+        }
+        $response->getBody()->write($json);
+        return $response;
+    });
+    //Funcion busqueda por maestro
+    $app->get('/asistenciapormaestros/{idUsuario}', function ($request, $response, $args) {
+        try {
+            $arrayDias = ["domingo", "lunes", "martes", "miercoles", "jueves", "viernes", "sabado"];
+            $diaSemana = gene_week_day();
+            $idUsuario = $args['idUsuario'];
+            $fechaActual = gene_date();
+            $sql = "SELECT asi.*, usu.nombres as nombresUsuario, usu.apellidos as apellidosUsuarios, eve.nombre as nombreEvento, eve.grupo as grupo, ubi.nombre as salon, eve.horaEntrada as horaEntradaEvento, eve.horaSalida as horaSalidaEvento FROM asistencias AS asi INNER JOIN usuarios AS usu ON asi.idUsuario = usu.idUsuario INNER JOIN eventos AS eve ON asi.idEvento = eve.idEvento INNER JOIN ubicaciones AS ubi ON eve.idUbicacion = ubi.idUbicacion INNER JOIN dias AS dia ON asi.idEvento = dia.idEvento WHERE asi.estatus != 0 AND (dia.$arrayDias[$diaSemana] = 1) AND asi.fechaActual = DATE('$fechaActual') AND asi.idUsuario = $idUsuario";
+            $dbc = new db();
+            $dbc = $dbc->connect();
+            $stmt = $dbc->query($sql);
+            $data = $stmt->fetchAll(PDO::FETCH_OBJ);
+            $dbc = null;
+            $json = json_encode(['status' => true, 'code' => 200, 'data' => $data]);
+            /*if ($data) {
+                $json = json_encode(['status' => true, 'code' => 200, 'data' => $data]);
+            } else {
+                $json = json_encode(['status' => false, 'code' => 401, 'data' => 'No hay asistencias']);
+            }*/
+        } catch (PDOException $ERROR) {
+            $message = $ERROR->getMessage();
+            $json = json_encode(['status' => false, 'code' => 400, 'data' => $message]);
+        }
+        $response->getBody()->write($json);
+        return $response;
     });
 });
