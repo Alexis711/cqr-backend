@@ -204,14 +204,16 @@ $app->group('/asistencias', function ($app) {
         return $response;
     });
     //Funcion de asistencia por dia, hora y grupo
-    $app->get('/asistenciaporgrupo/{horaActual}/{grupo}', function ($request, $response, $args) {
+    $app->get('/asistenciaporgrupo/{fechaInicio}/{fechaFin}/{grupo}', function ($request, $response, $args) {
         try {
             $arrayDias = ["domingo", "lunes", "martes", "miercoles", "jueves", "viernes", "sabado"];
             $diaSemana = gene_week_day();
-            $horaActual = $args['horaActual'];
             $grupo = $args['grupo'];
-            $fechaActual = gene_date();
-            $sql = "SELECT asi.*, usu.nombres as nombresUsuario, usu.apellidos as apellidosUsuarios, eve.nombre as nombreEvento, eve.grupo as grupo, ubi.nombre as salon, eve.horaEntrada as horaEntradaEvento, eve.horaSalida as horaSalidaEvento FROM asistencias AS asi INNER JOIN usuarios AS usu ON asi.idUsuario = usu.idUsuario INNER JOIN eventos AS eve ON asi.idEvento = eve.idEvento INNER JOIN ubicaciones AS ubi ON eve.idUbicacion = ubi.idUbicacion INNER JOIN dias AS dia ON asi.idEvento = dia.idEvento WHERE asi.estatus != 0 AND (dia.$arrayDias[$diaSemana] = 1) AND asi.fechaActual = DATE('$fechaActual') AND ('$horaActual' >= eve.horaEntrada AND '$horaActual' <= eve.horaSalida ) AND eve.grupo = '$grupo'";
+            $fechaInicio = $args['fechaInicio'];
+            $fechaFin = $args['fechaFin'];
+            //$sql = "SELECT asi.*, usu.nombres as nombresUsuario, usu.apellidos as apellidosUsuarios, eve.nombre as nombreEvento, eve.grupo as grupo, ubi.nombre as salon, eve.horaEntrada as horaEntradaEvento, eve.horaSalida as horaSalidaEvento FROM asistencias AS asi INNER JOIN usuarios AS usu ON asi.idUsuario = usu.idUsuario INNER JOIN eventos AS eve ON asi.idEvento = eve.idEvento INNER JOIN ubicaciones AS ubi ON eve.idUbicacion = ubi.idUbicacion INNER JOIN dias AS dia ON asi.idEvento = dia.idEvento WHERE asi.estatus != 0 AND (dia.$arrayDias[$diaSemana] = 1) AND asi.fechaActual = DATE('$fechaActual') AND ('$horaActual' >= eve.horaEntrada AND '$horaActual' <= eve.horaSalida ) AND eve.grupo = '$grupo'";
+            $sql = "SELECT asi.*, usu.nombres as nombresUsuario, usu.apellidos as apellidosUsuarios, eve.nombre as nombreEvento, eve.grupo as grupo, ubi.nombre as salon, eve.horaEntrada as horaEntradaEvento, eve.horaSalida as horaSalidaEvento FROM asistencias AS asi INNER JOIN usuarios AS usu ON asi.idUsuario = usu.idUsuario INNER JOIN eventos AS eve ON asi.idEvento = eve.idEvento INNER JOIN ubicaciones AS ubi ON eve.idUbicacion = ubi.idUbicacion INNER JOIN dias AS dia ON asi.idEvento = dia.idEvento WHERE asi.estatus != 0 AND (dia.$arrayDias[$diaSemana] = 1) AND (asi.fechaActual >= DATE('$fechaInicio') AND asi.fechaActual <= DATE('$fechaFin')) AND eve.grupo = '$grupo'";
+            
             $dbc = new db();
             $dbc = $dbc->connect();
             $stmt = $dbc->query($sql);

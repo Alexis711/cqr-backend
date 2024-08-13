@@ -49,6 +49,7 @@ $app->group('/usuarios', function($app){
             $data = $request->getParsedBody();
             $uuid = gene_id();
             $clave = $data["clave"];
+            $nombreUsuario = $data["nombreUsuario"];
             $clave = gene_encryp($clave);
             $estatus = 1;
             $sql = "INSERT INTO usuarios (idUsuario, nombreUsuario, correo, clave, nombres, apellidos, telefono, domicilio, estatus, idRol) VALUES (:idUsuario, :nombreUsuario, :correo, :clave, :nombres, :apellidos, :telefono, :domicilio, :estatus, :idRol)";
