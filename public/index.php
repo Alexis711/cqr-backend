@@ -46,5 +46,8 @@ $app->get('/Api', function (Request $request, Response $response) {
 include '../routes/asistencias.php';
 include '../routes/usuarios.php';
 include '../routes/roles.php';
+include '../routes/eventos.php';
+include '../routes/ubicaciones.php';
+
 
 $app->run();
