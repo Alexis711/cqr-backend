@@ -47,7 +47,8 @@ $app->group('/eventos', function($app){
     $app->post('/crear', function($request, $response, $args){
         try {
             $data = $request->getParsedBody();
-            $sql = "INSERT INTO eventos (nombre, grupo, fechaInicio, fechaFin, horaEntrada, horaSalida, tipoEvento, idUbicacion, idUsuario) VALUES (:nombre, :grupo, :fechaInicio, :fechaFin, :horaEntrada, :horaSalida, :tipoEvento, :idUbicacion, :idUsuario)";
+            $sql = "INSERT INTO eventos (idEvento, nombre, grupo, fechaInicio, fechaFin, horaEntrada, horaSalida, tipoEvento, idUbicacion, idUsuario) 
+            VALUES (:idEvento, :nombre, :grupo, :fechaInicio, :fechaFin, :horaEntrada, :horaSalida, :tipoEvento, :idUbicacion, :idUsuario)";
             $dbc = new db();
             $dbc = $dbc->connect();
             $stmt = $dbc->prepare($sql);
