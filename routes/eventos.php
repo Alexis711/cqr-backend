@@ -47,14 +47,14 @@ $app->group('/eventos', function($app){
     $app->post('/crear', function($request, $response, $args){
         try {
             $data = $request->getParsedBody();
-            $sql = "INSERT INTO eventos (nombre, grupo, fechaInicio, fechaFinal, horaEntrada, horaSalida, tipoEvento, repeticion, diaSemana, idUbicacion, idUsuario) VALUES (:nombre, :grupo, :fechaInicio, :fechaFinal, :horaEntrada, :horaSalida, :tipoEvento, :repeticion, :diaSemana, :idUbicacion, :idUsuario)";
+            $sql = "INSERT INTO eventos (nombre, grupo, fechaInicio, fechaFin, horaEntrada, horaSalida, tipoEvento, repeticion, diaSemana, idUbicacion, idUsuario) VALUES (:nombre, :grupo, :fechaInicio, :fechaFin, :horaEntrada, :horaSalida, :tipoEvento, :repeticion, :diaSemana, :idUbicacion, :idUsuario)";
             $dbc = new db();
             $dbc = $dbc->connect();
             $stmt = $dbc->prepare($sql);
             $stmt->bindParam("nombre", $data["nombre"]);
             $stmt->bindParam("grupo", $data["grupo"]);
             $stmt->bindParam("fechaInicio", $data["fechaInicio"]);
-            $stmt->bindParam("fechaFinal", $data["fechaFinal"]);
+            $stmt->bindParam("fechaFin", $data["fechaFin"]);
             $stmt->bindParam("horaEntrada", $data["horaEntrada"]);
             $stmt->bindParam("horaSalida", $data["horaSalida"]);
             $stmt->bindParam("tipoEvento", $data["tipoEvento"]);
