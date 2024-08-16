@@ -47,10 +47,12 @@ $app->group('/eventos', function($app){
     $app->post('/crear', function($request, $response, $args){
         try {
             $data = $request->getParsedBody();
+            $uuid = gene_id();
             $sql = "INSERT INTO eventos (nombre, grupo, fechaInicio, fechaFin, horaEntrada, horaSalida, tipoEvento, repeticion, diaSemana, idUbicacion, idUsuario) VALUES (:nombre, :grupo, :fechaInicio, :fechaFin, :horaEntrada, :horaSalida, :tipoEvento, :repeticion, :diaSemana, :idUbicacion, :idUsuario)";
             $dbc = new db();
             $dbc = $dbc->connect();
             $stmt = $dbc->prepare($sql);
+            $stmt->bindParam("idEvento", $uuid);
             $stmt->bindParam("nombre", $data["nombre"]);
             $stmt->bindParam("grupo", $data["grupo"]);
             $stmt->bindParam("fechaInicio", $data["fechaInicio"]);
