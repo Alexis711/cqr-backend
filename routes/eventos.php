@@ -48,7 +48,7 @@ $app->group('/eventos', function($app){
         try {
             $data = $request->getParsedBody();
             $uuid = gene_id();
-            $sql = "INSERT INTO eventos (nombre, grupo, fechaInicio, fechaFin, horaEntrada, horaSalida, tipoEvento, repeticion, diaSemana, idUbicacion, idUsuario) VALUES (:nombre, :grupo, :fechaInicio, :fechaFin, :horaEntrada, :horaSalida, :tipoEvento, :repeticion, :diaSemana, :idUbicacion, :idUsuario)";
+            $sql = "INSERT INTO eventos (nombre, grupo, fechaInicio, fechaFin, horaEntrada, horaSalida, tipoEvento, idUbicacion, idUsuario) VALUES (:nombre, :grupo, :fechaInicio, :fechaFin, :horaEntrada, :horaSalida, :tipoEvento, :idUbicacion, :idUsuario)";
             $dbc = new db();
             $dbc = $dbc->connect();
             $stmt = $dbc->prepare($sql);
@@ -60,8 +60,6 @@ $app->group('/eventos', function($app){
             $stmt->bindParam("horaEntrada", $data["horaEntrada"]);
             $stmt->bindParam("horaSalida", $data["horaSalida"]);
             $stmt->bindParam("tipoEvento", $data["tipoEvento"]);
-            $stmt->bindParam("repeticion", $data["repeticion"]);
-            $stmt->bindParam("diaSemana", $data["diaSemana"]);
             $stmt->bindParam("idUbicacion", $data["idUbicacion"]);
             $stmt->bindParam("idUsuario", $data["idUsuario"]);
             $stmt->execute();
