@@ -47,6 +47,7 @@ $app->group('/eventos', function($app){
     $app->post('/crear', function($request, $response, $args){
         try {
             $data = $request->getParsedBody();
+            $uuid = gene_id();
             $sql = "INSERT INTO eventos (idEvento, nombre, grupo, fechaInicio, fechaFin, horaEntrada, horaSalida, tipoEvento, idUbicacion, idUsuario) 
             VALUES (:idEvento, :nombre, :grupo, :fechaInicio, :fechaFin, :horaEntrada, :horaSalida, :tipoEvento, :idUbicacion, :idUsuario)";
             $dbc = new db();
