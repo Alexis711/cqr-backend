@@ -80,7 +80,7 @@ $app->group('/eventos', function($app){
     $app->put('/editar', function($request, $response, $args){
         try {
             $data = $request->getParsedBody();
-            $sql = "UPDATE eventos SET nombre= :nombre, grupo= :grupo, fechaInicio= :fechaInicio, fechaFinal= :fechaFinal, horaEntrada= :horaEntrada, horaSalida= :horaSalida, tipoEvento= :tipoEvento, repeticion= :repeticion, diaSemana= :diaSemana, idUbicacion= :idUbicacion, idUsuario= :idUsuario WHERE idEvento= :idEvento";
+            $sql = "UPDATE eventos SET nombre= :nombre, grupo= :grupo, fechaInicio= :fechaInicio, fechaFin= :fechaFin, horaEntrada= :horaEntrada, horaSalida= :horaSalida, tipoEvento= :tipoEvento, repeticion= :repeticion, diaSemana= :diaSemana, idUbicacion= :idUbicacion, idUsuario= :idUsuario WHERE idEvento= :idEvento";
             $dbc = new db();
             $dbc = $dbc->connect();
             $stmt = $dbc->prepare($sql);
@@ -88,7 +88,7 @@ $app->group('/eventos', function($app){
             $stmt->bindParam("nombre", $data["nombre"]);
             $stmt->bindParam("grupo", $data["grupo"]);
             $stmt->bindParam("fechaInicio", $data["fechaInicio"]);
-            $stmt->bindParam("fechaFinal", $data["fechaFinal"]);
+            $stmt->bindParam("fechaFin", $data["fechaFin"]);
             $stmt->bindParam("horaEntrada", $data["horaEntrada"]);
             $stmt->bindParam("horaSalida", $data["horaSalida"]);
             $stmt->bindParam("tipoEvento", $data["tipoEvento"]);
