@@ -51,6 +51,7 @@ $app->group('/eventos', function($app){
             $dbc = new db();
             $dbc = $dbc->connect();
             $stmt = $dbc->prepare($sql);
+            $stmt->bindParam("idEvento", $uuid);
             $stmt->bindParam("nombre", $data["nombre"]);
             $stmt->bindParam("grupo", $data["grupo"]);
             $stmt->bindParam("fechaInicio", $data["fechaInicio"]);
