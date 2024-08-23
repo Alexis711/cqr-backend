@@ -48,10 +48,24 @@ $app->group('/eventos', function($app){
         try {
             $data = $request->getParsedBody();
             $uuid = gene_id();
-            $sql = "INSERT INTO eventos (idEvento, nombre, grupo, fechaInicio, fechaFin, horaEntrada, horaSalida, tipoEvento, idUbicacion, idUsuario) 
-            VALUES (:idEvento, :nombre, :grupo, :fechaInicio, :fechaFin, :horaEntrada, :horaSalida, :tipoEvento, :idUbicacion, :idUsuario)";
             $dbc = new db();
             $dbc = $dbc->connect();
+            $lun = $data["lun"];
+            $mar = $data["mar"];
+            $mie = $data["mie"];
+            $jue = $data["jue"];
+            $vie = $data["vie"];
+            $sqlDias = "INSERT INTO dias (idDia, lunes, martes, miercoles, jueves, viernes)
+            VALUE (:idDia, :lunes, :martes, :miercoles, :jueves, :viernes)";
+            $stmtDias = $dbc->prepare($sqlDias);
+            $stmtDias->bindParam("lunes", $lun);
+            $stmtDias->bindParam("martes", $mar);
+            $stmtDias->bindParam("miercoles", $mie);
+            $stmtDias->bindParam("jueves", $jue);
+            $stmtDias->bindParam("viernes", $vie);
+            $sql = "INSERT INTO eventos (idEvento, nombre, grupo, fechaInicio, fechaFin, horaEntrada, horaSalida, tipoEvento, idUbicacion, idUsuario) 
+            VALUES (:idEvento, :nombre, :grupo, :fechaInicio, :fechaFin, :horaEntrada, :horaSalida, :tipoEvento, :idUbicacion, :idUsuario)";
+            
             $stmt = $dbc->prepare($sql);
             $stmt->bindParam("idEvento", $uuid);
             $stmt->bindParam("nombre", $data["nombre"]);

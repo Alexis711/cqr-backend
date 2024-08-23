@@ -49,30 +49,70 @@ $app->group('/usuarios', function($app){
             $data = $request->getParsedBody();
             $uuid = gene_id();
             $clave = $data["clave"];
-            $nombreUsuario = $data["nombreUsuario"];
             $clave = gene_encryp($clave);
+            $nombreUsuario = $data["nombreUsuario"];
+            $correo = $data["correo"];
             $estatus = 1;
-            $sql = "INSERT INTO usuarios (idUsuario, nombreUsuario, correo, clave, nombres, apellidos, telefono, domicilio, estatus, idRol) VALUES (:idUsuario, :nombreUsuario, :correo, :clave, :nombres, :apellidos, :telefono, :domicilio, :estatus, :idRol)";
+            //Conexion
             $dbc = new db();
             $dbc = $dbc->connect();
-            $stmt = $dbc->prepare($sql);
-            $stmt->bindParam("idUsuario", $uuid);
-            $stmt->bindParam("nombreUsuario", $data["nombreUsuario"]);
-            $stmt->bindParam("correo", $data["correo"]);
-            $stmt->bindParam("clave", $clave);
-            $stmt->bindParam("nombres", $data["nombres"]);
-            $stmt->bindParam("apellidos", $data["apellidos"]);
-            $stmt->bindParam("telefono", $data["telefono"]);
-            $stmt->bindParam("domicilio", $data["domicilio"]);
-            $stmt->bindParam("estatus", $estatus);
-            $stmt->bindParam("idRol", $data["idRol"]);
-            $stmt->execute();
-            $dbc = null;
-            if ($data) {
-                $json = json_encode(['status' => true, 'code' => 200, 'data' => 'Fue generado el usuario']);
+            //Sentencia 1
+            $sqlNomUsu = "SELECT nombreUsuario FROM usuarios WHERE nombreUsuario = '$nombreUsuario'";
+            $sqlCorreo = "SELECT * FROM usuarios WHERE correo = '$correo'";
+            $comStmtNomUsu = $dbc->query($sqlNomUsu);
+            $comDataNomUsu = $comStmtNomUsu->fetchAll(PDO::FETCH_OBJ);
+            $comStmtCorreo = $dbc->query($sqlCorreo);
+            $comDataCorreo = $comStmtCorreo->fetchAll(PDO::FETCH_OBJ);
+            if($comDataNomUsu){
+                $json = json_encode(['status' => true, 'code' => 409, 'data' => 'Ya existe un usuario registrados con ese nombre de usuario']);
+            }else if($comDataCorreo){
+                $json = json_encode(['status' => true, 'code' => 409, 'data' => 'El correo ya esta registrado con otro usuario']);
             }else{
-                $json = json_encode(['status' => false, 'code' => 401, 'data' => 'Ocurrio un error en la generación']);
+                $sql = "INSERT INTO usuarios (idUsuario, nombreUsuario, correo, clave, nombres, apellidos, telefono, domicilio, estatus, idRol) VALUES (:idUsuario, :nombreUsuario, :correo, :clave, :nombres, :apellidos, :telefono, :domicilio, :estatus, :idRol)";
+                $stmt = $dbc->prepare($sql);
+                $stmt->bindParam("idUsuario", $uuid);
+                $stmt->bindParam("nombreUsuario", $data["nombreUsuario"]);
+                $stmt->bindParam("correo", $data["correo"]);
+                $stmt->bindParam("clave", $clave);
+                $stmt->bindParam("nombres", $data["nombres"]);
+                $stmt->bindParam("apellidos", $data["apellidos"]);
+                $stmt->bindParam("telefono", $data["telefono"]);
+                $stmt->bindParam("domicilio", $data["domicilio"]);
+                $stmt->bindParam("estatus", $estatus);
+                $stmt->bindParam("idRol", $data["idRol"]);
+                $stmt->execute();
+                if ($data) {
+                    $json = json_encode(['status' => true, 'code' => 200, 'data' => 'Fue generado el usuario']);
+                }else{
+                    $json = json_encode(['status' => false, 'code' => 401, 'data' => 'Ocurrio un error en la generación']);
+                }
             }
+            /*$comData = null;
+            $comStmt = null;
+            $comStmt = $dbc->query($sqlCorreo);
+            $comData = $comStmt->fetchAll(PDO::FETCH_OBJ);
+            if($comData){
+                $sql = "INSERT INTO usuarios (idUsuario, nombreUsuario, correo, clave, nombres, apellidos, telefono, domicilio, estatus, idRol) VALUES (:idUsuario, :nombreUsuario, :correo, :clave, :nombres, :apellidos, :telefono, :domicilio, :estatus, :idRol)";
+                $stmt = $dbc->prepare($sql);
+                $stmt->bindParam("idUsuario", $uuid);
+                $stmt->bindParam("nombreUsuario", $data["nombreUsuario"]);
+                $stmt->bindParam("correo", $data["correo"]);
+                $stmt->bindParam("clave", $clave);
+                $stmt->bindParam("nombres", $data["nombres"]);
+                $stmt->bindParam("apellidos", $data["apellidos"]);
+                $stmt->bindParam("telefono", $data["telefono"]);
+                $stmt->bindParam("domicilio", $data["domicilio"]);
+                $stmt->bindParam("estatus", $estatus);
+                $stmt->bindParam("idRol", $data["idRol"]);
+                $stmt->execute();
+                if ($data) {
+                    $json = json_encode(['status' => true, 'code' => 200, 'data' => 'Fue generado el usuario']);
+                }else{
+                    $json = json_encode(['status' => false, 'code' => 401, 'data' => 'Ocurrio un error en la generación']);
+                }
+            }else{
+                $json = json_encode(['status' => true, 'code' => 409, 'data' => 'Ya existe un usuario registrado con el ese correo eléctronico']);
+            }*/            
         } catch (PDOException $error) {
             $message = $error->getMessage();
             $json = json_encode(['status' => false, 'code' => 400, 'data' => $message]);
@@ -187,6 +227,49 @@ $app->group('/usuarios', function($app){
     $app->get('/buscarActivos', function($request, $response,$args){
         try {
             $sql = "SELECT usu.*, rol.nombre as idRol FROM usuarios as usu INNER JOIN Roles as rol WHERE usu.estatus = 1 AND usu.idRol = rol.idRol";
+            $dbc = new db();
+            $dbc = $dbc->connect();
+            $stmt = $dbc->query($sql);
+            $data = $stmt->fetchAll(PDO::FETCH_OBJ);
+            $dbc = null;
+            if ($data) {
+                $json = json_encode(['status' => true, 'code' => 200, 'data' => $data ]);
+            }else{
+                $json = json_encode(['status' => false, 'code' => 401, 'data' => "No se encontraron usuarios"]);
+            }
+        } catch (PDOException $error) {
+            $message = $error->getMessage();
+            $json = json_encode(['status' => false, 'code' => 400, 'data' => $message]);
+        }
+        $response->getBody()->write($json);
+        return $response;
+    });
+    //Consulta de usuarios de seleccion
+    $app->get('/usuariosSeleccionar', function($request, $response,$args){
+        try {
+            $sql = "SELECT idUsuario, nombres, apellidos FROM usuarios ORDER BY nombres ASC";
+            $dbc = new db();
+            $dbc = $dbc->connect();
+            $stmt = $dbc->query($sql);
+            $data = $stmt->fetchAll(PDO::FETCH_OBJ);
+            $dbc = null;
+            if ($data) {
+                $json = json_encode(['status' => true, 'code' => 200, 'data' => $data ]);
+            }else{
+                $json = json_encode(['status' => false, 'code' => 401, 'data' => "No se encontraron usuarios"]);
+            }
+        } catch (PDOException $error) {
+            $message = $error->getMessage();
+            $json = json_encode(['status' => false, 'code' => 400, 'data' => $message]);
+        }
+        $response->getBody()->write($json);
+        return $response;
+    });
+    //Busqueda de usuarios de seleccion
+    $app->get('/buscarUsuariosNombreCompleto/{nombreCompleto}', function($request, $response,$args){
+        try {
+            $nombreCompleto = $args["nombreCompleto"];
+            $sql = "SELECT idUsuario, nombres, apellidos FROM usuarios WHERE CONCAT(nombres,' ',apellidos) like '%$nombreCompleto%' ORDER BY nombres ASC";
             $dbc = new db();
             $dbc = $dbc->connect();
             $stmt = $dbc->query($sql);
