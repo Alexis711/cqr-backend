@@ -287,5 +287,30 @@ $app->group('/usuarios', function($app){
         $response->getBody()->write($json);
         return $response;
     });
+    $app->post('/iniciodesesionmovil',function($request, $response, $args){
+        try {
+            $usuario = $request->getParsedBody();
+            $correo = $usuario ["correo"];
+            $clave = gene_encryp($usuario ["clave"]);
+            $nombreUsuario = $usuario ["nombreUsuario"];
+            $sql="SELECT * FROM usuarios WHERE (correo = '$correo' or nombreUsuario = '$nombreUsuario') AND clave='$clave'";
+            $dbc=new db();
+            $dbc= $dbc ->connect();
+            $stmt = $dbc -> query($sql);
+            $usuario = $stmt-> fetchAll(PDO::FETCH_OBJ);
+            $dbc = NULL;
+            if ($usuario) {
+                $json = json_encode(['status' => true, 'code' => 200, 'data' => $usuario]);
+            }else{
+                $json = json_encode(['status' => false, 'code' => 401, 'data' => 'No se encontro el usuario solicitado']);
+            }
+
+        } catch (PDOException $error) {
+            $message = $error->getMessage();
+            $json = json_encode(['status' => false, 'code' => 400, 'data' => $message]);
+        }
+        $response -> getBody()->write($json);
+        return $response;
+    });
 });
 ?>
