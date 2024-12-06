@@ -165,5 +165,45 @@ $app->group('/eventos', function($app){
         $response->getBody()->write($json);
         return $response;
     });
+
+    //Buscar eventos del maestro
+    $app->get('/eventosmaestro/{idUsuario}', function($request, $response,$args){
+        try {
+            $idUsuario = $args["idUsuario"];
+            $fechaActual = gene_date();
+            $diaSemana = gene_week_day_name();
+            $sql = "SELECT eve.*, 
+            ubi.nombre as nombreUbicacion, 
+            usu.nombreUsuario as nombreUsuario, 
+            usu.nombres as nombreUsu, 
+            usu.apellidos as apellidosUsu, 
+            dia.lunes as Lun, 
+            dia.martes as Mar, 
+            dia.miercoles as Mie, 
+            dia.jueves as Jue, 
+            dia.viernes as Vie 
+            FROM eventos as eve 
+            INNER JOIN dias as dia ON dia.idEvento = eve.idEvento 
+            INNER JOIN usuarios as usu ON eve.idUsuario = usu.idUsuario 
+            INNER JOIN ubicaciones as ubi ON eve.idUbicacion = ubi.idUbicacion 
+            WHERE usu.idUsuario='$idUsuario' AND (eve.fechaInicio <= DATE('$fechaActual') AND eve.fechaFin >= DATE('$fechaActual'))
+            AND dia.$diaSemana = 1";
+            $dbc = new db();
+            $dbc = $dbc->connect();
+            $stmt = $dbc->query($sql);
+            $data = $stmt->fetchAll(PDO::FETCH_OBJ);
+            $dbc = null;
+            if ($data) {
+                $json = json_encode(['status' => true, 'code' => 200, 'data' => $data, 'semana' => $diaSemana ]);
+            }else{
+                $json = json_encode(['status' => false, 'code' => 401, 'data' => "No se encontraron eventos"]);
+            }
+        } catch (PDOException $error) {
+            $message = $error->getMessage();
+            $json = json_encode(['status' => false, 'code' => 400, 'data' => $message]);
+        }
+        $response->getBody()->write($json);
+        return $response;
+    });
 });
 ?>

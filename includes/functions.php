@@ -53,4 +53,22 @@ function gene_decryp($string){
     return $output;
 }
 
+//Funcion para dias de la semana
+function gene_week_day_name() {
+    date_default_timezone_set('America/Mexico_City');
+    setlocale(LC_TIME, 'es_MX.UTF-8');
+
+    $days = [
+        'domingo',
+        'lunes',  
+        'martes', 
+        'miércoles',
+        'jueves', 
+        'viernes',
+        'sabado'  
+    ];
+    $day_index = date('w');
+    return $days[$day_index];
+}
+
 ?>
