@@ -292,8 +292,7 @@ $app->group('/usuarios', function($app){
             $usuario = $request->getParsedBody();
             $correo = $usuario ["correo"];
             $clave = gene_encryp($usuario ["clave"]);
-            $nombreUsuario = $usuario ["nombreUsuario"];
-            $sql="SELECT * FROM usuarios WHERE (correo = '$correo' or nombreUsuario = '$nombreUsuario') AND clave='$clave'";
+            $sql="SELECT * FROM usuarios WHERE (correo = '$correo' or nombreUsuario = '$correo') AND clave='$clave'";
             $dbc=new db();
             $dbc= $dbc ->connect();
             $stmt = $dbc -> query($sql);
