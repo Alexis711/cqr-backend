@@ -4,7 +4,7 @@ class db{
     private $dbhost = 'localhost';
     private $dbuser = 'root';
     private $dbpass = '';
-    private $dbname = 'db_cqr';
+    private $dbname = 'bd_cqr';
 
     
     // Conexion
