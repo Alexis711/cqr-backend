@@ -44,10 +44,11 @@ $app->get('/Api', function (Request $request, Response $response) {
 
 // Rutas
 include '../routes/asistencias.php';
-include '../routes/usuarios.php';
-include '../routes/roles.php';
 include '../routes/eventos.php';
+include '../routes/instituciones.php';
+include '../routes/salones.php';
 include '../routes/ubicaciones.php';
+include '../routes/usuarios.php';
 
 
 $app->run();
